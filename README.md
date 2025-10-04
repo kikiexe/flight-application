@@ -20,19 +20,18 @@ and a **smart contract layer** developed using Foundry.
 ## 🚀 Cara Menjalankan Proyek
 
 ### 1️⃣ Setup Smart Contract
-```bash
 cd sc
 forge build
 forge test
 forge script script/Deploy.s.sol --broadcast --rpc-url <RPC_URL> --private-key <PRIVATE_KEY>
 
 
-###2️⃣ Setup Backend
+### 2️⃣ Setup Backend
 cd be
 npm install
 node server.js
 
-###3️⃣ Setup Frontend
+### 3️⃣ Setup Frontend
 cd fe
 npm install
 npm run dev
