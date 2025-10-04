@@ -28,11 +28,13 @@ forge script script/Deploy.s.sol --broadcast --rpc-url <RPC_URL> --private-key <
 
 
 ### 1️⃣ Setup Backend
+```bash
 cd be
 npm install
 node server.js
 
 ### 1️⃣ Setup Frontend
+```bash
 cd fe
 npm install
 npm run dev
