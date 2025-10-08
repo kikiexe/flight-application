@@ -8,7 +8,7 @@ export default function HeroSection({ onStart }) {
   const [destination, setDestination] = useState('');
   const [departureDate, setDepartureDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
-  const [passengers, setPassengers] = useState('1 Dewasa');
+  const [passengers, setPassengers] = useState({ adults: 1, children: 0 });
   const [travelClass, setTravelClass] = useState('Kelas Ekonomi');
   const [showPassengerDropdown, setShowPassengerDropdown] = useState(false);
   const [showClassDropdown, setShowClassDropdown] = useState(false);
@@ -62,6 +62,17 @@ export default function HeroSection({ onStart }) {
       returnDate,
       passengers,
       travelClass 
+    });
+  };
+
+  const handlePassengerChange = (type, amount) => {
+    setPassengers(prev => {
+      const newCount = prev[type] + amount;
+      // Prevent counts from going below 0 (or 1 for adults)
+      if (type === 'adults' && newCount < 1) return prev;
+      if (type === 'children' && newCount < 0) return prev;
+      
+      return { ...prev, [type]: newCount };
     });
   };
 
@@ -309,50 +320,55 @@ export default function HeroSection({ onStart }) {
 
                 {/* Passengers Dropdown */}
                 <div className="relative">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                <label className="block text-xs font-medium text-gray-600 mb-2">
                     Penumpang
-                  </label>
-                  <button
+                </label>
+                <button
                     onClick={() => {
-                      setShowPassengerDropdown(!showPassengerDropdown);
-                      setShowClassDropdown(false);
-                      setShowDepartureDropdown(false);
-                      setShowDestinationDropdown(false);
+                    setShowPassengerDropdown(!showPassengerDropdown);
+                    setShowClassDropdown(false);
+                    setShowDepartureDropdown(false);
+                    setShowDestinationDropdown(false);
                     }}
                     className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-red-600 flex items-center justify-between text-left"
-                  >
-                    <span className="text-gray-900">{passengers}</span>
+                >
+                    {/* Dynamically display passenger count */}
+                    <span className="text-gray-900">
+                    {passengers.adults} Dewasa{passengers.children > 0 ? `, ${passengers.children} Anak` : ''}
+                    </span>
                     <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </button>
-                  
-                  {showPassengerDropdown && (
+                </button>
+                
+                {showPassengerDropdown && (
                     <div className="absolute top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-20 p-4">
-                      <div className="space-y-3">
+                    <div className="space-y-3">
+                        {/* Adult Counter */}
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">Dewasa</span>
-                          <div className="flex items-center gap-2">
-                            <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">-</button>
-                            <span className="w-8 text-center">1</span>
-                            <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">+</button>
-                          </div>
+                        <span className="text-sm text-gray-700">Dewasa</span>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => handlePassengerChange('adults', -1)} className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">-</button>
+                            <span className="w-8 text-center">{passengers.adults}</span>
+                            <button onClick={() => handlePassengerChange('adults', 1)} className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">+</button>
                         </div>
+                        </div>
+                        {/* Child Counter */}
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">Anak</span>
-                          <div className="flex items-center gap-2">
-                            <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">-</button>
-                            <span className="w-8 text-center">0</span>
-                            <button className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">+</button>
-                          </div>
+                        <span className="text-sm text-gray-700">Anak</span>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => handlePassengerChange('children', -1)} className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">-</button>
+                            <span className="w-8 text-center">{passengers.children}</span>
+                            <button onClick={() => handlePassengerChange('children', 1)} className="w-8 h-8 border border-gray-300 rounded hover:bg-gray-100">+</button>
+                        </div>
                         </div>
                         <button
-                          onClick={() => setShowPassengerDropdown(false)}
-                          className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium"
+                        onClick={() => setShowPassengerDropdown(false)}
+                        className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium"
                         >
-                          Selesai
+                        Selesai
                         </button>
-                      </div>
                     </div>
-                  )}
+                    </div>
+                )}
                 </div>
 
                 {/* Class Dropdown */}
