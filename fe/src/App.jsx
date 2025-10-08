@@ -1,35 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
 
-function App() {
-  const [count, setCount] = useState(0)
+import Header from './components/Header.jsx';
+import HeroSection from './components/HeroSection.jsx';
+import Features from './components/Features.jsx';
+import CompensationScheme from './components/CompensationScheme.jsx';
+import Footer from './components/Footer.jsx';
+
+export default function App() {
+  const [isConnected, setIsConnected] = useState(false);
+  const [address, setAddress] = useState('');
+
+  const connectWallet = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setAddress(accounts[0]);
+        setIsConnected(true);
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
+      }
+    } else {
+      alert('Please install MetaMask to use this feature');
+    }
+  };
+  
+  const handleStartNowClick = () => {
+    if (!isConnected) {
+      connectWallet();
+    } else {
+      console.log("Wallet already connected, proceed to the main app...");
+    }
+  };
+  
+  useEffect(() => {
+    const checkInitialConnection = async () => {
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          setAddress(accounts[0]);
+          setIsConnected(true);
+        }
+      }
+    };
+    checkInitialConnection();
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen bg-white">
+      <Header 
+        isConnected={isConnected} 
+        address={address} 
+        onConnect={connectWallet} 
+      />
+      <main>
+        <HeroSection onStart={handleStartNowClick} />
+        <Features />
+        <CompensationScheme />
+      </main>
+      <Footer />
+    </div>
+  );
 }
-
-export default App
