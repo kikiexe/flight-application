@@ -1,7 +1,10 @@
+// fe/src/components/Header.jsx
+
 import { Plane } from 'lucide-react';
 
-export default function Header({ isConnected, address, onConnect }) {
+export default function Header({ isConnected, address, onConnect, onDisconnect }) {
   const formatAddress = (addr) => {
+    // Pengaman tambahan, walaupun pengecekan utama ada di JSX
     if (!addr) return '';
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
@@ -23,12 +26,23 @@ export default function Header({ isConnected, address, onConnect }) {
           <a href="#" className="hover:text-red-600 transition-colors">Bantuan</a>
         </nav>
         
-        <button
-          onClick={onConnect}
-          className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
-        >
-          {isConnected ? formatAddress(address) : 'Connect Wallet'}
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onConnect}
+            className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
+          >
+            {/* INI BAGIAN YANG DIPERBAIKI */}
+            {isConnected && address ? formatAddress(address) : 'Connect Wallet'}
+          </button>
+          {isConnected && (
+            <button
+              onClick={onDisconnect}
+              className="px-6 py-2 text-sm font-medium text-red-600 bg-white border border-red-600 rounded hover:bg-red-50 transition-colors"
+            >
+              Disconnect
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

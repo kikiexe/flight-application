@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+// fe/src/App.jsx
+
+import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useAccount, useDisconnect } from 'wagmi';
 
 import Header from './components/Header.jsx';
 import HeroSection from './components/HeroSection.jsx';
@@ -7,50 +10,25 @@ import CompensationScheme from './components/CompensationScheme.jsx';
 import Footer from './components/Footer.jsx';
 
 export default function App() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [address, setAddress] = useState('');
+  const { open } = useWeb3Modal();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setAddress(accounts[0]);
-        setIsConnected(true);
-      } catch (error) {
-        console.error('Error connecting wallet:', error);
-      }
-    } else {
-      alert('Please install MetaMask to use this feature');
-    }
-  };
-  
   const handleStartNowClick = () => {
     if (!isConnected) {
-      connectWallet();
+      open();
     } else {
       console.log("Wallet already connected, proceed to the main app...");
     }
   };
-  
-  useEffect(() => {
-    const checkInitialConnection = async () => {
-      if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-          setAddress(accounts[0]);
-          setIsConnected(true);
-        }
-      }
-    };
-    checkInitialConnection();
-  }, []);
 
   return (
     <div className="min-h-screen bg-white">
-      <Header 
-        isConnected={isConnected} 
-        address={address} 
-        onConnect={connectWallet} 
+      <Header
+        isConnected={isConnected}
+        address={address}
+        onConnect={() => open()}
+        onDisconnect={() => disconnect()}
       />
       <main>
         <HeroSection onStart={handleStartNowClick} />
