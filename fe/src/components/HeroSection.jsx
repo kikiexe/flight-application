@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, X, ChevronDown, Plane } from 'lucide-react';
 
-export default function HeroSection({ onStart }) {
+export default function HeroSection({ onSearch }) {
   const [activeTab, setActiveTab] = useState('book');
   const [tripType, setTripType] = useState('round');
   const [departure, setDeparture] = useState('');
@@ -55,14 +55,19 @@ export default function HeroSection({ onStart }) {
   };
 
   const handleSearch = () => {
-    console.log('Searching flights...', { 
+    // 1. Kumpulkan semua data dari state ke dalam satu objek
+    const searchData = { 
       departure, 
       destination, 
       departureDate, 
       returnDate,
-      passengers,
-      travelClass 
-    });
+      passengers, // Ini adalah state object yang sudah kita perbaiki, e.g., { adults: 1, children: 0 }
+      travelClass,
+      tripType
+    };
+    
+    // 2. Panggil fungsi onSearch yang dikirim dari App.jsx dan teruskan datanya
+    onSearch(searchData); 
   };
 
   const handlePassengerChange = (type, amount) => {
@@ -90,7 +95,7 @@ export default function HeroSection({ onStart }) {
               Asuransi penerbangan otomatis berbasis blockchain
             </p>
             <button 
-              onClick={onStart}
+              onClick={onSearch}
               className="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
             >
               Mulai Sekarang

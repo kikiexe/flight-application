@@ -1,9 +1,28 @@
 const express = require('express');
+const cors = require('cors');
 const { ethers } = require('ethers');
 require('dotenv').config();
 
 const app = express();
+const port = process.env.PORT || 3001;
+
+app.use(cors());
 app.use(express.json());
+
+const dummyFlights = [
+  { id: 1, airline: 'Satha Fly', flightNumber: 'SF 204', departureTime: '07:30', arrivalTime: '10:15', duration: '2j 45m', price: 1500000 },
+  { id: 2, airline: 'Satha Fly', flightNumber: 'SF 032', departureTime: '08:00', arrivalTime: '10:50', duration: '2j 50m', price: 1400000 },
+  { id: 3, airline: 'Satha Fly', flightNumber: 'SF 812', departureTime: '09:15', arrivalTime: '12:00', duration: '2j 45m', price: 1100000 },
+];
+
+app.post('/api/flights/search', (req, res) => {
+  const searchParams = req.body;
+  console.log('[POST /api/flights/search] Backend menerima permintaan pencarian untuk:', searchParams);
+  
+  // Untuk sekarang, kita kembalikan semua data dummy.
+  // Nantinya Anda bisa menambahkan logika filter di sini.
+  res.status(200).json(dummyFlights);
+});
 
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const backendSigner = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY, provider);
@@ -160,7 +179,7 @@ app.post('/withdraw', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server Backend siap di http://localhost:${PORT}`);
-    console.log("Tekan CTRL+C untuk menghentikan server.");
+app.listen(port, () => {
+    console.log(`✈️  Server Backend (gabungan) siap di http://localhost:${port}`);
+    console.log("   Tekan CTRL+C untuk menghentikan server.");
 });

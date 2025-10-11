@@ -16,7 +16,7 @@ export default function Header({ isConnected, address, onConnect, onDisconnect }
           <div className="bg-red-600 p-2 rounded">
             <Plane className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-semibold text-gray-900">FlightGuard</span>
+          <span className="text-xl font-semibold text-gray-900">Satha Fly</span>
         </div>
         
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-700">
