@@ -51,8 +51,6 @@ contract FlightInsuranceTest is Test {
         uint256 expectedRefund = (TICKET_PRICE * 80) / 100;
         assertEq(idrx.balanceOf(user), userBalanceBefore - TICKET_PRICE + expectedRefund, "User should receive 80% refund");
         
-        // --- PERBAIKAN FINAL ---
-        // Menggunakan signature error secara langsung
         vm.expectRevert(abi.encodeWithSignature("ERC721NonexistentToken(uint256)", tokenId));
         flightInsurance.ownerOf(tokenId);
     }
