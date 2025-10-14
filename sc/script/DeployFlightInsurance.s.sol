@@ -1,38 +1,26 @@
+// sc/script/DeployFlightInsurance.s.sol
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
 import {FlightInsurance} from "../src/FlightInsurance.sol";
-import {MockIDRX} from "../test/FlightInsurance.t.sol";
 
 contract DeployFlightInsurance is Script {
-
-    function run() external returns (FlightInsurance, MockIDRX) {
-        // Alamat yang akan menjadi owner/backend dari contract (yang menjalankan script)
-        address owner = msg.sender;
-
-        // Alamat wallet user simulasi (Akun #1 dari Anvil)
-        address userWallet = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+    function run() external returns (FlightInsurance) {
+        // Alamat token IDRX Anda yang sudah ada
+        address existingIdrxTokenAddress = 0xEFeA2880F52F845cB6A5a7bAfbBe74ec67b38606;
 
         vm.startBroadcast();
 
-        // 1. Deploy MockIDRX
-        console.log("Deploying MockIDRX...");
-        MockIDRX idrx = new MockIDRX();
-        console.log("MockIDRX deployed to:", address(idrx));
+        console.log("Menggunakan alamat IDRX yang sudah ada:", existingIdrxTokenAddress);
 
-        // 2. Beri "uang saku" 10 Juta IDRX ke wallet user
-        uint256 initialUserBalance = 10000000 * 1e2; // Rp 10.000.000
-        idrx.mint(userWallet, initialUserBalance);
-        console.log("Minted", initialUserBalance, "IDRX to user wallet:", userWallet);
-        
-        // 3. Deploy FlightInsurance dengan alamat MockIDRX dan owner
-        console.log("Deploying FlightInsurance...");
-        FlightInsurance flightInsurance = new FlightInsurance(address(idrx), owner);
-        console.log("FlightInsurance deployed to:", address(flightInsurance));
+        // Deploy FlightInsurance dengan alamat IDRX dan alamat dompet Anda sebagai owner
+        FlightInsurance flightInsurance = new FlightInsurance(existingIdrxTokenAddress, msg.sender);
+        console.log("FlightInsurance contract deployed at:", address(flightInsurance));
 
         vm.stopBroadcast();
-        
-        return (flightInsurance, idrx);
+        return (flightInsurance);
     }
 }

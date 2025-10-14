@@ -2,17 +2,14 @@
 
 import { ArrowLeft, Plane } from 'lucide-react';
 
-export default function FlightResultsPage({ searchParams, flights, onBack }) {
-  // Jika tidak ada data, jangan render apa-apa (safety check)
+export default function FlightResultsPage({ searchParams, flights, onBack, onSelectFlight }) {
   if (!searchParams) return null;
 
-  // Ambil data keberangkatan dan tujuan untuk ditampilkan di header
   const { departure, destination, departureDate } = searchParams;
 
   return (
     <div className="bg-gray-50">
       <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Header Halaman Hasil */}
         <div className="mb-6">
           <button onClick={onBack} className="flex items-center gap-2 text-sm text-gray-700 hover:text-red-600 mb-4 font-medium">
             <ArrowLeft className="w-4 h-4" />
@@ -28,11 +25,9 @@ export default function FlightResultsPage({ searchParams, flights, onBack }) {
           </p>
         </div>
 
-        {/* Daftar Penerbangan */}
         <div className="space-y-4">
           {flights && flights.length > 0 ? (
             flights.map((flight) => (
-              // Kartu untuk setiap penerbangan
               <div key={flight.id} className="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:shadow-lg">
                 <div className="flex-1 w-full">
                   <div className="flex items-center gap-4 mb-4">
@@ -61,7 +56,9 @@ export default function FlightResultsPage({ searchParams, flights, onBack }) {
                     {new Intl.NumberFormat('id-ID').format(flight.price)} IDRX
                   </p>
                   <p className="text-xs text-gray-500 mb-3">/orang</p>
-                  <button className="w-full px-8 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                  <button 
+                    onClick={() => onSelectFlight(flight)}
+                    className="w-full px-8 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                     Pilih
                   </button>
                 </div>
