@@ -37,7 +37,7 @@ export default function HeroSection({ onSearch }) {
   const filterAirports = (searchTerm) => {
     if (!searchTerm) return airports;
     const search = searchTerm.toLowerCase();
-    return airports.filter(airport => 
+    return airports.filter(airport =>
       airport.city.toLowerCase().includes(search) ||
       airport.code.toLowerCase().includes(search) ||
       airport.name.toLowerCase().includes(search)
@@ -70,7 +70,7 @@ export default function HeroSection({ onSearch }) {
       departureDate,
       returnDate,
       passengers,
-      travelClass, 
+      travelClass,
       tripType
     };
 
@@ -83,7 +83,7 @@ export default function HeroSection({ onSearch }) {
       // Prevent counts from going below 0 (or 1 for adults)
       if (type === 'adults' && newCount < 1) return prev;
       if (type === 'children' && newCount < 0) return prev;
-      
+
       return { ...prev, [type]: newCount };
     });
   };
@@ -101,13 +101,6 @@ export default function HeroSection({ onSearch }) {
             <p className="text-xl text-gray-700 mb-8">
               Asuransi penerbangan otomatis berbasis blockchain
             </p>
-            <button 
-              onClick={onSearch}
-              className="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
-            >
-              Mulai Sekarang
-              <ArrowRight className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </div>
@@ -118,21 +111,21 @@ export default function HeroSection({ onSearch }) {
           {/* Tabs */}
           <div className="mb-6">
             <div className="flex gap-6 border-b border-gray-200">
-              <button 
+              <button
                 onClick={() => setActiveTab('book')}
                 className={`pb-3 px-2 text-sm font-medium transition-colors ${
-                  activeTab === 'book' 
-                    ? 'text-red-600 border-b-2 border-red-600' 
+                  activeTab === 'book'
+                    ? 'text-red-600 border-b-2 border-red-600'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Pesan penerbangan
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('manage')}
                 className={`pb-3 px-2 text-sm font-medium transition-colors ${
-                  activeTab === 'manage' 
-                    ? 'text-red-600 border-b-2 border-red-600' 
+                  activeTab === 'manage'
+                    ? 'text-red-600 border-b-2 border-red-600'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -185,8 +178,8 @@ export default function HeroSection({ onSearch }) {
                     Bandara keberangkatan
                   </label>
                   <div className="relative">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={departure}
                       onChange={(e) => {
                         setDeparture(e.target.value);
@@ -215,7 +208,7 @@ export default function HeroSection({ onSearch }) {
                         <X className="w-4 h-4" />
                       </button>
                     )}
-                    
+
                     {/* Departure Dropdown */}
                     {showDepartureDropdown && (
                       <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-30 max-h-64 overflow-y-auto">
@@ -247,8 +240,8 @@ export default function HeroSection({ onSearch }) {
                     Bandara kedatangan
                   </label>
                   <div className="relative">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={destination}
                       onChange={(e) => {
                         setDestination(e.target.value);
@@ -277,7 +270,7 @@ export default function HeroSection({ onSearch }) {
                         <X className="w-4 h-4" />
                       </button>
                     )}
-                    
+
                     {/* Destination Dropdown */}
                     {showDestinationDropdown && (
                       <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-30 max-h-64 overflow-y-auto">
@@ -308,7 +301,7 @@ export default function HeroSection({ onSearch }) {
                   <label className="block text-xs font-medium text-gray-600 mb-2">
                     Berangkat
                   </label>
-                  <input 
+                  <input
                     type="date"
                     value={departureDate}
                     onChange={(e) => setDepartureDate(e.target.value)}
@@ -321,7 +314,7 @@ export default function HeroSection({ onSearch }) {
                     <label className="block text-xs font-medium text-gray-600 mb-2">
                       Pulang
                     </label>
-                    <input 
+                    <input
                       type="date"
                       value={returnDate}
                       onChange={(e) => setReturnDate(e.target.value)}
@@ -350,7 +343,7 @@ export default function HeroSection({ onSearch }) {
                     </span>
                     <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
-                
+
                 {showPassengerDropdown && (
                     <div className="absolute top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-20 p-4">
                     <div className="space-y-3">
@@ -400,7 +393,7 @@ export default function HeroSection({ onSearch }) {
                     <span className="text-gray-900">{travelClass}</span>
                     <ChevronDown className="w-4 h-4 text-gray-400" />
                   </button>
-                  
+
                   {showClassDropdown && (
                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-20 overflow-hidden">
                       {['Kelas Ekonomi', 'Kelas Bisnis', 'First Class'].map((cls) => (
@@ -422,7 +415,7 @@ export default function HeroSection({ onSearch }) {
 
               {/* Search Button */}
               <div className="mt-6">
-                <button 
+                <button
                   onClick={handleSearch}
                   className="w-full md:w-auto px-12 py-3 text-base font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
                 >
