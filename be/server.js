@@ -1,14 +1,81 @@
+// be/server.js (SUDAH DIPERBARUI)
+
 const express = require('express');
 const cors = require('cors');
 const { ethers } = require('ethers');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3001;
-
 app.use(cors());
 app.use(express.json());
 
+// --- KONFIGURASI KONTRAK ---
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+const backendWallet = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY, provider);
+
+// --- PERBAIKAN: ABI Lengkap dari Smart Contract Terbaru ---
+const contractABI = [
+  "constructor(address _idrxToken, address initialOwner)",
+  "error ERC721IncorrectOwner(address sender, uint256 tokenId, address owner)",
+  "error ERC721InsufficientApproval(address operator, uint256 tokenId)",
+  "error ERC721InvalidApprover(address approver)",
+  "error ERC721InvalidOperator(address operator)",
+  "error ERC721InvalidOwner(address owner)",
+  "error ERC721InvalidReceiver(address receiver)",
+  "error ERC721InvalidSender(address sender)",
+  "error ERC721NonexistentToken(uint256 tokenId)",
+  "error EnforcedPause()",
+  "error ExpectedPause()",
+  "error OwnableInvalidOwner(address owner)",
+  "error OwnableUnauthorizedAccount(address account)",
+  "event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)",
+  "event ApprovalForAll(address indexed owner, address indexed operator, bool approved)",
+  "event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId)",
+  "event FlightStatusReported(uint256 indexed tokenId, uint8 newStatus, uint256 refundAmount)",
+  "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+  "event Paused(address account)",
+  "event RefundProcessed(uint256 indexed tokenId, address indexed owner, uint256 refundAmount)",
+  "event TicketCancelledByUser(uint256 indexed tokenId, address indexed owner)",
+  "event TicketMinted(uint256 indexed tokenId, address indexed owner, string passengerName, uint256 flightId)",
+  "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
+  "event Unpaused(address account)",
+  "function approve(address to, uint256 tokenId)",
+  "function balanceOf(address owner) view returns (uint256)",
+  "function cancelTicket(uint256 tokenId)",
+  "function getApproved(uint256 tokenId) view returns (address)",
+  "function getTicketInfo(uint256 tokenId) view returns (tuple(uint256 flightId, string passengerName, string departureCity, string destinationCity, uint256 departureDate, uint256 amount, uint8 status, uint256 refundAmount))",
+  "function idrxToken() view returns (address)",
+  "function isApprovedForAll(address owner, address operator) view returns (bool)",
+  "function mintTicket(string passengerName, uint256 flightId, string departureCity, string destinationCity, uint256 departureDate, uint256 amount) returns (uint256)",
+  "function name() view returns (string)",
+  "function owner() view returns (address)",
+  "function ownerOf(uint256 tokenId) view returns (address)",
+  "function pause()",
+  "function paused() view returns (bool)",
+  "function renounceOwnership()",
+  "function reportFlightStatus(uint256 tokenId, uint8 status, uint256 delayInHours)",
+  "function safeTransferFrom(address from, address to, uint256 tokenId)",
+  "function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)",
+  "function setApprovalForAll(address operator, bool _approved)",
+  "function supportsInterface(bytes4 interfaceId) view returns (bool)",
+  "function symbol() view returns (string)",
+  "function ticketDetails(uint256) view returns (uint256 flightId, string passengerName, string departureCity, string destinationCity, uint256 departureDate, uint256 amount, uint8 status, uint256 refundAmount)",
+  "function tokenURI(uint256 tokenId) view returns (string)",
+  "function transferFrom(address from, address to, uint256 tokenId)",
+  "function transferOwnership(address newOwner)",
+  "function unpause()",
+  "function withdrawFunds()"
+];
+
+
+const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, contractABI, backendWallet);
+
+console.log("Backend terhubung ke kontrak di alamat:", process.env.CONTRACT_ADDRESS);
+
+
+// --- API ENDPOINTS ---
+
+// Endpoint untuk data dummy penerbangan
 const dummyFlights = [
   { id: 1, airline: 'Satha Fly', flightNumber: 'SF 204', departureTime: '07:30', arrivalTime: '10:15', duration: '2j 45m', price: 1500000 },
   { id: 2, airline: 'Satha Fly', flightNumber: 'SF 032', departureTime: '08:00', arrivalTime: '10:50', duration: '2j 50m', price: 1400000 },
@@ -17,147 +84,53 @@ const dummyFlights = [
 
 app.post('/api/flights/search', (req, res) => {
   const searchParams = req.body;
-  console.log('[POST /api/flights/search] Backend menerima permintaan pencarian untuk:', searchParams);
-  
-  // Untuk sekarang, kita kembalikan semua data dummy.
-  // Nantinya Anda bisa menambahkan logika filter di sini.
-  res.status(200).json(dummyFlights);
+  console.log('[POST /api/flights/search] Menerima permintaan pencarian:', searchParams);
+  // Logika filter bisa ditambahkan di sini jika perlu
+  res.json(dummyFlights);
 });
 
-const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-const backendSigner = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY, provider);
-const userSigner = new ethers.Wallet(process.env.USER_PRIVATE_KEY, provider);
-
-const contractAddress = process.env.CONTRACT_ADDRESS;
-const mockIdrxAddress = process.env.MOCKIDRX_ADDRESS;
-
-// Simplified ABI - hanya yang kita butuhkan
-const contractABI = [
-    "function mintTicket(string passengerName, uint256 flightId, string departureCity, string destinationCity, uint256 departureDate, uint256 amount) returns (uint256)",
-    "function ticketDetails(uint256) view returns (uint256 flightId, string passengerName, string departureCity, string destinationCity, uint256 departureDate, uint256 amount, uint8 status, uint256 refundAmount)",
-    "function ownerOf(uint256 tokenId) view returns (address)",
-    "function reportFlightStatus(uint256 tokenId, uint8 status, uint256 delayInHours)",
-    "function withdrawFunds()",
-    "function balanceOf(address owner) view returns (uint256)"
-];
-
-const idrxABI = [
-    "function approve(address spender, uint256 amount) returns (bool)"
-];
-
-const contractAsBackend = new ethers.Contract(contractAddress, contractABI, backendSigner);
-const contractAsUser = new ethers.Contract(contractAddress, contractABI, userSigner);
-const idrxContractAsUser = new ethers.Contract(mockIdrxAddress, idrxABI, userSigner);
-
-console.log(`[BLOCKCHAIN] Terhubung dengan Smart Contract di alamat: ${contractAddress}`);
-
-let lastTokenId = 0;
-
-app.get('/', (req, res) => {
-    res.status(200).json({ message: 'Selamat datang di Flight Insurance API!' });
-});
-
-app.post('/tickets', async (req, res) => {
-    try {
-        const { passengerName, flightId, departureCity, destinationCity, departureDate, amount } = req.body;
-        if (!passengerName || !flightId || !amount) {
-            return res.status(400).json({ error: "Input tidak lengkap." });
-        }
-
-        console.log(`[POST /tickets] User (${userSigner.address}) meminta mint tiket...`);
-
-        const nonce = await provider.getTransactionCount(userSigner.address, 'latest');
-        console.log(`[DEBUG] Nonce: ${nonce}`);
-
-        console.log(`[POST /tickets] Approve IDRX...`);
-        const approveTx = await idrxContractAsUser.approve(contractAddress, amount, { nonce });
-        await approveTx.wait();
-        console.log(`[POST /tickets] Approve berhasil.`);
-
-        console.log(`[POST /tickets] Mint ticket...`);
-        const mintTx = await contractAsUser.mintTicket(
-            passengerName, 
-            flightId, 
-            departureCity || "", 
-            destinationCity || "", 
-            departureDate || 0, 
-            amount,
-            { nonce: nonce + 1 }
-        );
-        
-        await mintTx.wait();
-        console.log(`[POST /tickets] Mint berhasil, hash: ${mintTx.hash}`);
-
-        lastTokenId++;
-        const tokenId = lastTokenId;
-        
-        console.log(`[DEBUG] TokenId: ${tokenId}`);
-
-        // Gunakan ticketDetails langsung instead of getTicketInfo
-        const ticket = await contractAsBackend.ticketDetails(tokenId);
-        const owner = await contractAsBackend.ownerOf(tokenId);
-        
-        const statusString = ["Purchased", "Delay", "Cancelled", "Refunded"][Number(ticket.status)];
-
-        res.status(201).json({
-            message: "Tiket berhasil di-mint!",
-            transactionHash: mintTx.hash,
-            ticket: {
-                tokenId: tokenId,
-                owner: owner,
-                passengerName: ticket.passengerName,
-                flightId: Number(ticket.flightId),
-                route: `${ticket.departureCity} - ${ticket.destinationCity}`,
-                departureDate: Number(ticket.departureDate),
-                price: Number(ticket.amount),
-                status: statusString
-            }
-        });
-
-    } catch (error) {
-        console.error("[POST /tickets] Error:", error);
-        res.status(500).json({ 
-            error: "Terjadi kesalahan saat memproses tiket.", 
-            details: error.message 
-        });
-    }
-});
-
+// Endpoint untuk melaporkan status penerbangan (oleh backend/owner)
 app.post('/report-status', async (req, res) => {
+    const { tokenId, status, delayInHours } = req.body;
+
+    // Konversi status string ke enum integer
+    const statusEnum = { "Delay": 1, "Cancelled": 2 };
+    const statusInt = statusEnum[status];
+
+    if (typeof statusInt === 'undefined') {
+        return res.status(400).json({ error: "Status tidak valid. Gunakan 'Delay' atau 'Cancelled'." });
+    }
+
     try {
-        const { tokenId, status, delayInHours } = req.body;
-        const statusEnum = { "Purchased": 0, "Delay": 1, "Cancelled": 2, "Refunded": 3 };
-        const statusInt = statusEnum[status];
-        
-        console.log(`[POST /report-status] Backend melaporkan status untuk tokenId: ${tokenId}`);
-        const tx = await contractAsBackend.reportFlightStatus(tokenId, statusInt, delayInHours || 0);
-        
+        console.log(`[POST /report-status] Melaporkan status untuk Token ID #${tokenId}: ${status}, Delay: ${delayInHours || 0} jam`);
+        const tx = await contract.reportFlightStatus(tokenId, statusInt, delayInHours || 0);
         await tx.wait();
-        console.log(`[POST /report-status] Status berhasil dilaporkan.`);
+        console.log(`[POST /report-status] Laporan untuk Token ID #${tokenId} berhasil diproses.`);
         res.status(200).json({ message: "Status penerbangan berhasil dilaporkan.", transactionHash: tx.hash });
     } catch (error) {
-        console.error("[POST /report-status] Error:", error);
-        res.status(500).json({ error: "Terjadi kesalahan saat melaporkan status." });
+        console.error(`[POST /report-status] Error:`, error);
+        res.status(500).json({ error: "Gagal melaporkan status penerbangan." });
     }
 });
 
+
+// Endpoint untuk mengambil detail tiket (public)
 app.get('/tickets/:tokenId', async (req, res) => {
+    const { tokenId } = req.params;
     try {
-        const { tokenId } = req.params;
-        const ticket = await contractAsBackend.ticketDetails(tokenId);
-        const owner = await contractAsBackend.ownerOf(tokenId);
+        const ticket = await contract.getTicketInfo(tokenId);
+        // `ticket` adalah sebuah array/tuple, kita perlu mengubahnya menjadi objek
         const statusString = ["Purchased", "Delay", "Cancelled", "Refunded"][Number(ticket.status)];
 
         res.status(200).json({
             tokenId: tokenId,
-            owner: owner,
             passengerName: ticket.passengerName,
             flightId: Number(ticket.flightId),
             route: `${ticket.departureCity} - ${ticket.destinationCity}`,
-            departureDate: Number(ticket.departureDate),
-            price: Number(ticket.amount),
+            departureDate: new Date(Number(ticket.departureDate) * 1000).toISOString(),
+            price: ethers.formatEther(ticket.amount),
             status: statusString,
-            refundAmount: Number(ticket.refundAmount),
+            refundAmount: ethers.formatEther(ticket.refundAmount),
         });
     } catch (error) {
         console.error(`[GET /tickets] Error:`, error);
@@ -165,10 +138,11 @@ app.get('/tickets/:tokenId', async (req, res) => {
     }
 });
 
+// Endpoint untuk menarik dana (oleh backend/owner)
 app.post('/withdraw', async (req, res) => {
     try {
         console.log(`[POST /withdraw] Backend meminta penarikan dana...`);
-        const tx = await contractAsBackend.withdrawFunds();
+        const tx = await contract.withdrawFunds();
         await tx.wait();
         console.log(`[POST /withdraw] Penarikan dana berhasil.`);
         res.status(200).json({ message: "Dana berhasil ditarik.", transactionHash: tx.hash });
@@ -178,8 +152,8 @@ app.post('/withdraw', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`✈️  Server Backend (gabungan) siap di http://localhost:${port}`);
-    console.log("   Tekan CTRL+C untuk menghentikan server.");
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Backend server berjalan di http://localhost:${PORT}`);
 });

@@ -1,7 +1,7 @@
 // sc/src/FlightInsurance.sol (FINAL - SUDAH BERSIH)
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.30;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -13,7 +13,7 @@ import { LibString as Strings } from "solady/utils/LibString.sol";
 contract FlightInsurance is ERC721, Ownable, Pausable {
     uint256 private _nextTokenId = 1;
 
-    IERC20 public idrxToken;
+    IERC20 public idrsToken;
 
     enum Status { Purchased, Delay, Cancelled, Refunded }
 
@@ -35,11 +35,11 @@ contract FlightInsurance is ERC721, Ownable, Pausable {
     event RefundProcessed(uint256 indexed tokenId, address indexed owner, uint256 refundAmount);
     event TicketCancelledByUser(uint256 indexed tokenId, address indexed owner);
 
-    constructor(address _idrxToken, address initialOwner)
+    constructor(address _idrsToken, address initialOwner)
         ERC721("FlightTicketNFT", "FTN")
         Ownable(initialOwner)
     {
-        idrxToken = IERC20(_idrxToken);
+        idrsToken = IERC20(_idrsToken);
     }
 
     function pause() external onlyOwner {
@@ -59,7 +59,7 @@ contract FlightInsurance is ERC721, Ownable, Pausable {
         uint256 amount
     ) external whenNotPaused returns (uint256) {
         require(amount > 0, "Amount must be greater than 0");
-        require(idrxToken.transferFrom(msg.sender, address(this), amount), "IDRX transfer failed");
+        require(idrsToken.transferFrom(msg.sender, address(this), amount), "IDRS transfer failed");
 
         uint256 newTokenId = _nextTokenId;
         _nextTokenId++;
@@ -88,7 +88,7 @@ contract FlightInsurance is ERC721, Ownable, Pausable {
         
         _burn(tokenId);
         
-        require(idrxToken.transfer(msg.sender, refundAmount), "Refund transfer failed");
+        require(idrsToken.transfer(msg.sender, refundAmount), "Refund transfer failed");
 
         emit TicketCancelledByUser(tokenId, msg.sender);
     }
@@ -112,7 +112,7 @@ contract FlightInsurance is ERC721, Ownable, Pausable {
             address ticketOwner = ownerOf(tokenId);
             t.refundAmount = refund;
             t.status = Status.Refunded;
-            require(idrxToken.transfer(ticketOwner, refund), "IDRX refund failed");
+            require(idrsToken.transfer(ticketOwner, refund), "IDRS refund failed");
             emit RefundProcessed(tokenId, ticketOwner, refund);
         }
 
@@ -120,9 +120,9 @@ contract FlightInsurance is ERC721, Ownable, Pausable {
     }
     
     function withdrawFunds() external onlyOwner whenNotPaused {
-        uint256 balance = idrxToken.balanceOf(address(this));
+        uint256 balance = idrsToken.balanceOf(address(this));
         require(balance > 0, "No funds to withdraw");
-        require(idrxToken.transfer(owner(), balance), "Withdrawal failed");
+        require(idrsToken.transfer(owner(), balance), "Withdrawal failed");
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {

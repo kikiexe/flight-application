@@ -1,14 +1,12 @@
 // fe/src/utils/contracts.js
 
-// Alamat-alamat ini adalah placeholder. Ganti dengan alamat yang sesuai setelah deployment.
-export const FLIGHT_INSURANCE_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3'; // Contoh alamat kontrak
-export const IDRX_TOKEN_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';       // Contoh alamat token IDRX
+export const FLIGHT_INSURANCE_ADDRESS = '0x9Ef5459216E8Bf1f12618cb3FA795C71a4cC6BCE';
+export const IDRS_TOKEN_ADDRESS = '0xAE5CD607f92bED8482422c10B7e85245eFc7f79E';
 
-// ABI untuk FlightInsurance.sol
 export const FLIGHT_INSURANCE_ABI = [
   {
     "inputs": [
-      { "internalType": "address", "name": "_idrxToken", "type": "address" },
+      { "internalType": "address", "name": "_idrsToken", "type": "address" },
       { "internalType": "address", "name": "initialOwner", "type": "address" }
     ],
     "stateMutability": "nonpayable",
@@ -95,7 +93,7 @@ export const FLIGHT_INSURANCE_ABI = [
   },
   {
     "inputs": [],
-    "name": "idrxToken",
+    "name": "idrsToken",
     "outputs": [
       { "internalType": "contract IERC20", "name": "", "type": "address" }
     ],
