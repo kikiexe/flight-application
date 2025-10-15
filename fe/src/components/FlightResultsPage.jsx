@@ -53,7 +53,7 @@ export default function FlightResultsPage({ searchParams, flights, onBack, onSel
                 </div>
                 <div className="md:border-l md:pl-6 border-gray-200 w-full md:w-auto text-center mt-4 md:mt-0">
                   <p className="text-2xl font-bold text-red-700">
-                    {new Intl.NumberFormat('id-ID').format(flight.price)} IDRX
+                    {new Intl.NumberFormat('id-ID').format(flight.price)} IDRS
                   </p>
                   <p className="text-xs text-gray-500 mb-3">/orang</p>
                   <button 

@@ -120,12 +120,12 @@ export default function FlightPurchasePage({
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-600">Harga Tiket (1 Dewasa)</span>
               <span className="font-semibold text-gray-900">
-                {new Intl.NumberFormat('id-ID').format(flight.price)} IDRX
+                {new Intl.NumberFormat('id-ID').format(flight.price)} IDRS
               </span>
             </div>
             <div className="flex justify-between items-center text-lg font-bold text-red-700 pt-3 border-t">
               <span>Total Pembayaran</span>
-              <span>{new Intl.NumberFormat('id-ID').format(flight.price)} IDRX</span>
+              <span>{new Intl.NumberFormat('id-ID').format(flight.price)} IDRS</span>
             </div>
 
             {/* Tombol Aksi */}
@@ -139,7 +139,7 @@ export default function FlightPurchasePage({
                     className="w-full px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     <Wallet className="w-5 h-5" />
-                    {isApproving ? 'Menyetujui...' : '1. Approve IDRX'}
+                    {isApproving ? 'Menyetujui...' : '1. Approve IDRS'}
                 </button>
                  {approveError && (
                     <p className="text-xs text-red-600 text-center break-words">Approval Gagal: {approveError.shortMessage || approveError.message}</p>

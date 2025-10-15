@@ -1,4 +1,4 @@
-// be/server.js (SUDAH DIPERBARUI)
+// be/server.js
 
 const express = require('express');
 const cors = require('cors');
@@ -9,11 +9,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- KONFIGURASI KONTRAK ---
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const backendWallet = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY, provider);
 
-// --- PERBAIKAN: ABI Lengkap dari Smart Contract Terbaru ---
 const contractABI = [
   "constructor(address _idrxToken, address initialOwner)",
   "error ERC721IncorrectOwner(address sender, uint256 tokenId, address owner)",
@@ -72,10 +70,6 @@ const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, contractABI, 
 
 console.log("Backend terhubung ke kontrak di alamat:", process.env.CONTRACT_ADDRESS);
 
-
-// --- API ENDPOINTS ---
-
-// Endpoint untuk data dummy penerbangan
 const dummyFlights = [
   { id: 1, airline: 'Satha Fly', flightNumber: 'SF 204', departureTime: '07:30', arrivalTime: '10:15', duration: '2j 45m', price: 1500000 },
   { id: 2, airline: 'Satha Fly', flightNumber: 'SF 032', departureTime: '08:00', arrivalTime: '10:50', duration: '2j 50m', price: 1400000 },
@@ -85,15 +79,13 @@ const dummyFlights = [
 app.post('/api/flights/search', (req, res) => {
   const searchParams = req.body;
   console.log('[POST /api/flights/search] Menerima permintaan pencarian:', searchParams);
-  // Logika filter bisa ditambahkan di sini jika perlu
+
   res.json(dummyFlights);
 });
 
-// Endpoint untuk melaporkan status penerbangan (oleh backend/owner)
 app.post('/report-status', async (req, res) => {
     const { tokenId, status, delayInHours } = req.body;
 
-    // Konversi status string ke enum integer
     const statusEnum = { "Delay": 1, "Cancelled": 2 };
     const statusInt = statusEnum[status];
 
@@ -114,12 +106,11 @@ app.post('/report-status', async (req, res) => {
 });
 
 
-// Endpoint untuk mengambil detail tiket (public)
 app.get('/tickets/:tokenId', async (req, res) => {
     const { tokenId } = req.params;
     try {
         const ticket = await contract.getTicketInfo(tokenId);
-        // `ticket` adalah sebuah array/tuple, kita perlu mengubahnya menjadi objek
+
         const statusString = ["Purchased", "Delay", "Cancelled", "Refunded"][Number(ticket.status)];
 
         res.status(200).json({
@@ -138,7 +129,6 @@ app.get('/tickets/:tokenId', async (req, res) => {
     }
 });
 
-// Endpoint untuk menarik dana (oleh backend/owner)
 app.post('/withdraw', async (req, res) => {
     try {
         console.log(`[POST /withdraw] Backend meminta penarikan dana...`);
