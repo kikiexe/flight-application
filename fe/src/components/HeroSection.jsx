@@ -55,19 +55,26 @@ export default function HeroSection({ onSearch }) {
   };
 
   const handleSearch = () => {
-    // 1. Kumpulkan semua data dari state ke dalam satu objek
-    const searchData = { 
-      departure, 
-      destination, 
-      departureDate, 
+    if (!departure || !destination || !departureDate) {
+      alert('Silakan lengkapi semua bidang pencarian penerbangan.');
+      return;
+    }
+    if (tripType === 'round' && !returnDate) {
+      alert('Silakan pilih tanggal pulang untuk penerbangan pulang-pergi.');
+      return;
+    }
+
+    const searchData = {
+      departure,
+      destination,
+      departureDate,
       returnDate,
-      passengers, // Ini adalah state object yang sudah kita perbaiki, e.g., { adults: 1, children: 0 }
-      travelClass,
+      passengers,
+      travelClass, 
       tripType
     };
-    
-    // 2. Panggil fungsi onSearch yang dikirim dari App.jsx dan teruskan datanya
-    onSearch(searchData); 
+
+    onSearch(searchData);
   };
 
   const handlePassengerChange = (type, amount) => {
@@ -411,14 +418,6 @@ export default function HeroSection({ onSearch }) {
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Promo Code */}
-              <div className="mt-4">
-                <button className="text-sm text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <span>Gunakan kode promosi</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
               </div>
 
               {/* Search Button */}
