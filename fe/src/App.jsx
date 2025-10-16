@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useAccount, useDisconnect, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { readContract } from '@wagmi/core';
 import { parseEther, decodeEventLog } from 'viem';
 
 import Header from './components/Header.jsx';
@@ -13,28 +14,38 @@ import Footer from './components/Footer.jsx';
 import FlightResultsPage from './components/FlightResultsPage';
 import FlightPurchasePage from './components/FlightPurchasePage';
 
-// --- PERBAIKAN: Impor variabel yang sudah benar ---
 import { FLIGHT_INSURANCE_ADDRESS, FLIGHT_INSURANCE_ABI, IDRS_TOKEN_ADDRESS, IDRS_ABI } from './utils/contracts.js';
+import { config } from './wagmi.js';
 
 export default function App() {
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
+  // State untuk alur aplikasi
   const [view, setView] = useState('search'); // 'search', 'results', 'purchase'
   const [flightData, setFlightData] = useState({ searchParams: null, results: [] });
   const [selectedFlight, setSelectedFlight] = useState(null);
-  const [mintedTokenId, setMintedTokenId] = useState(null);
-
+  
+  // State untuk interaksi kontrak
   const { data: approveHash, error: approveError, isPending: isApproving, writeContract: approveContract } = useWriteContract();
   const { data: mintHash, error: mintError, isPending: isMinting, writeContract: mintContract } = useWriteContract();
   
   const { isSuccess: approveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
   const { data: mintReceipt, isSuccess: mintSuccess } = useWaitForTransactionReceipt({ hash: mintHash });
 
+  const [mintedTokenId, setMintedTokenId] = useState(null);
+  
+  // State baru untuk "Kelola Pemesanan"
+  const [tokenIdToCheck, setTokenIdToCheck] = useState('');
+  const [ticketDetails, setTicketDetails] = useState(null);
+  const [searchError, setSearchError] = useState('');
+  const [isCheckingTicket, setIsCheckingTicket] = useState(false);
+
+  // Fungsi untuk mencari penerbangan
   const handleFlightSearch = async (params) => {
     try {
-      const response = await fetch('http://localhost:3001/api/flights/search', { // Port disesuaikan ke 3001
+      const response = await fetch('http://localhost:3001/api/flights/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
@@ -48,6 +59,7 @@ export default function App() {
     }
   };
 
+  // Fungsi Navigasi
   const handleBackToSearch = () => {
     setView('search');
     setFlightData({ searchParams: null, results: [] });
@@ -64,12 +76,12 @@ export default function App() {
       setView('results');
       setSelectedFlight(null);
       setMintedTokenId(null);
-  }
+  };
 
+  // Fungsi Interaksi Kontrak
   const handleApprove = async () => {
     if (!selectedFlight) return;
     approveContract({
-        // --- PERBAIKAN: Menggunakan variabel yang benar ---
         address: IDRS_TOKEN_ADDRESS,
         abi: IDRS_ABI, 
         functionName: 'approve',
@@ -96,6 +108,58 @@ export default function App() {
     });
   };
 
+  // Fungsi baru untuk mengecek tiket
+  const handleCheckBooking = async () => {
+    if (!tokenIdToCheck) {
+      setSearchError("Silakan masukkan Token ID.");
+      return;
+    }
+    if (!isConnected) {
+      setSearchError("Silakan hubungkan dompet Anda terlebih dahulu.");
+      return;
+    }
+
+    setIsCheckingTicket(true);
+    setSearchError('');
+    setTicketDetails(null);
+
+    try {
+      const ownerAddress = await readContract(config, {
+        address: FLIGHT_INSURANCE_ADDRESS,
+        abi: FLIGHT_INSURANCE_ABI,
+        functionName: 'ownerOf',
+        args: [BigInt(tokenIdToCheck)],
+      });
+
+      if (address.toLowerCase() !== ownerAddress.toLowerCase()) {
+        setSearchError("Anda bukan pemilik tiket dengan ID ini, atau ID tidak valid.");
+        return;
+      }
+
+      const details = await readContract(config, {
+        address: FLIGHT_INSURANCE_ADDRESS,
+        abi: FLIGHT_INSURANCE_ABI,
+        functionName: 'getTicketInfo', // Pastikan nama fungsi ini sesuai dengan di contract Anda
+        args: [BigInt(tokenIdToCheck)],
+      });
+
+      setTicketDetails({
+        id: tokenIdToCheck,
+        passengerName: details.passengerName,
+        flightInfo: `Penerbangan dari ${details.departureCity} ke ${details.destinationCity}`,
+        departureTime: new Date(Number(details.departureDate) * 1000).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' }),
+        flightId: details.flightId.toString(),
+      });
+
+    } catch (error) {
+      console.error("Gagal memeriksa tiket:", error);
+      setSearchError("Gagal mengambil data. Pastikan ID benar dan Anda terhubung ke jaringan yang sesuai.");
+    } finally {
+      setIsCheckingTicket(false);
+    }
+  };
+
+  // useEffect untuk memantau transaksi
   useEffect(() => {
     if (approveSuccess) {
         alert("Approval token berhasil! Anda sekarang dapat melanjutkan untuk membayar dan mencetak tiket.");
@@ -130,7 +194,15 @@ export default function App() {
       <main className="flex-grow">
         {view === 'search' && (
           <>
-            <HeroSection onSearch={handleFlightSearch} />
+            <HeroSection 
+              onSearch={handleFlightSearch} 
+              tokenIdToCheck={tokenIdToCheck}
+              setTokenIdToCheck={setTokenIdToCheck}
+              handleCheckBooking={handleCheckBooking}
+              ticketDetails={ticketDetails}
+              searchError={searchError}
+              isCheckingTicket={isCheckingTicket}
+            />
             <Features />
             <CompensationScheme />
           </>
@@ -154,8 +226,10 @@ export default function App() {
             isMinting={isMinting}
             approveError={approveError}
             mintError={mintError}
+            isApproved={approveSuccess}
             mintSuccess={mintSuccess}
             mintedTokenId={mintedTokenId}
+            txHash={mintHash}
           />
         )}
       </main>

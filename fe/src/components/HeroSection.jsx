@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { ArrowRight, X, ChevronDown, Plane } from 'lucide-react';
 
-export default function HeroSection({ onSearch }) {
+export default function HeroSection({ 
+  onSearch,
+  tokenIdToCheck,
+  setTokenIdToCheck,
+  handleCheckBooking,
+  ticketDetails,
+  searchError
+}) {
+  // State untuk form pencarian penerbangan (tidak berubah)
   const [activeTab, setActiveTab] = useState('book');
   const [tripType, setTripType] = useState('round');
   const [departure, setDeparture] = useState('');
@@ -15,7 +23,9 @@ export default function HeroSection({ onSearch }) {
   const [showDepartureDropdown, setShowDepartureDropdown] = useState(false);
   const [showDestinationDropdown, setShowDestinationDropdown] = useState(false);
 
-  // Daftar bandara di Indonesia
+  // DIHAPUS: State duplikat untuk pengecekan tiket sudah dihapus dari sini.
+
+  // Daftar bandara (tidak berubah)
   const airports = [
     { code: 'CGK', city: 'Jakarta', name: 'Soekarno-Hatta' },
     { code: 'SUB', city: 'Surabaya', name: 'Juanda' },
@@ -425,24 +435,45 @@ export default function HeroSection({ onSearch }) {
             </>
           ) : (
             /* Manage Booking Tab */
-            <div className="py-8 text-center">
-              <p className="text-gray-600 mb-4">Kelola pemesanan Anda dengan mudah</p>
-              <div className="max-w-md mx-auto space-y-4">
-                <input
-                  type="text"
-                  placeholder="Kode booking"
-                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-red-600"
-                />
-                <input
-                  type="text"
-                  placeholder="Nama belakang"
-                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-red-600"
-                />
-                <button className="w-full px-6 py-3 text-base font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors">
-                  Cari Pemesanan
-                </button>
-              </div>
+          <div className="py-8 text-center">
+            <p className="text-gray-600 mb-4">Lihat detail tiket NFT Anda</p>
+            <div className="max-w-md mx-auto space-y-4">
+              
+              {/* Input dihubungkan ke state tokenIdToCheck */}
+              <input
+                type="number"
+                placeholder="Masukkan Token ID Tiket Anda"
+                value={tokenIdToCheck}
+                onChange={(e) => setTokenIdToCheck(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-red-600"
+              />
+              
+              {/* Tombol memanggil fungsi handleCheckBooking (yang sudah kita bahas sebelumnya) */}
+              <button 
+                onClick={handleCheckBooking} // Pastikan fungsi ini ada
+                className="w-full px-6 py-3 text-base font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
+              >
+                Cek Tiket Saya
+              </button>
             </div>
+
+            {/* Menampilkan pesan error jika ada */}
+            {searchError && (
+              <div className="mt-4 text-red-600">{searchError}</div>
+            )}
+
+            {/* Menampilkan detail tiket HANYA JIKA ticketDetails tidak null */}
+            {ticketDetails && (
+              <div className="mt-6 p-4 max-w-md mx-auto bg-gray-50 border rounded-lg text-left">
+                <h3 className="font-bold text-lg">Detail Tiket #{ticketDetails.id}</h3>
+                <div className="mt-2 space-y-1 text-sm">
+                  <p><strong>Penumpang:</strong> {ticketDetails.passengerName}</p>
+                  <p><strong>Penerbangan:</strong> {ticketDetails.flightInfo}</p>
+                  {/* Tambahkan detail lain yang relevan di sini */}
+                </div>
+              </div>
+            )}
+          </div>
           )}
         </div>
       </div>

@@ -1,7 +1,7 @@
 // fe/src/components/FlightPurchasePage.jsx
 
-import { useState } from 'react';
-import { ArrowLeft, User, Ticket, ShieldCheck, Wallet } from 'lucide-react';
+import { useState, useCallback } from 'react'; // --- PERBAIKAN: Impor useCallback
+import { ArrowLeft, User, Ticket, ShieldCheck, Wallet, CheckCircle } from 'lucide-react'; // --- PENINGKATAN: Impor ikon CheckCircle
 
 export default function FlightPurchasePage({
   flight,
@@ -13,39 +13,48 @@ export default function FlightPurchasePage({
   isMinting,
   mintError,
   approveError,
+  // --- PENINGKATAN UX: Prop baru untuk menandakan approval sudah berhasil
+  isApproved, 
   mintSuccess,
-  mintedTokenId
+  mintedTokenId,
+  // --- PENINGKATAN: Prop baru untuk link Etherscan yang dinamis
+  txHash 
 }) {
   const [passengerName, setPassengerName] = useState('');
 
-  // Handler untuk memastikan nama penumpang diisi sebelum approve/mint
-  const handleApprove = () => {
+  // --- BEST PRACTICE: Gunakan useCallback untuk stabilitas fungsi
+  const handleApprove = useCallback(() => {
     if (!passengerName.trim()) {
       alert('Silakan masukkan nama penumpang.');
       return;
     }
     onApprove();
-  };
+  }, [passengerName, onApprove]);
 
-  const handleMint = () => {
+  const handleMint = useCallback(() => {
     if (!passengerName.trim()) {
       alert('Silakan masukkan nama penumpang.');
       return;
     }
     onMint(passengerName);
-  };
+  }, [passengerName, onMint]);
 
-
-  if (!flight || !searchParams) return null;
+  // --- PERBAIKAN: Pengecekan data yang lebih aman
+  if (!flight || !searchParams) {
+    return (
+        <div className="flex justify-center items-center h-screen">
+            <p>Memuat data penerbangan...</p>
+        </div>
+    );
+  }
 
   const { departure, destination, departureDate } = searchParams;
-  const departureAirport = departure.split('(')[1].replace(')', '');
-  const destinationAirport = destination.split('(')[1].replace(')', '');
+  const departureAirport = departure.split('(')[1]?.replace(')', '') || 'N/A';
+  const destinationAirport = destination.split('(')[1]?.replace(')', '') || 'N/A';
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Tombol Kembali */}
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-sm text-gray-700 hover:text-red-600 mb-6 font-medium"
@@ -58,8 +67,8 @@ export default function FlightPurchasePage({
           {/* Kolom Kiri: Detail Penerbangan & Input Nama */}
           <div className="md:col-span-2 bg-white rounded-lg shadow-md p-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Detail Pemesanan</h1>
-
-            {/* Detail Penerbangan */}
+            
+            {/* ... (Tidak ada perubahan di bagian detail penerbangan & asuransi) ... */}
             <div className="border-b border-gray-200 pb-4 mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold text-lg">{flight.airline}</span>
@@ -83,8 +92,6 @@ export default function FlightPurchasePage({
                 {new Date(departureDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
             </div>
-
-            {/* Input Nama Penumpang */}
             <div className="mt-6">
               <label htmlFor="passengerName" className="block text-sm font-medium text-gray-700 mb-2">
                 Nama Penumpang (Sesuai KTP/Paspor)
@@ -98,11 +105,10 @@ export default function FlightPurchasePage({
                   onChange={(e) => setPassengerName(e.target.value)}
                   placeholder="Masukkan nama lengkap Anda"
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
-                  disabled={mintSuccess}
+                  disabled={mintSuccess || isApproving || isMinting}
                 />
               </div>
             </div>
-             {/* Asuransi */}
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
                 <ShieldCheck className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
@@ -128,53 +134,68 @@ export default function FlightPurchasePage({
               <span>{new Intl.NumberFormat('id-ID').format(flight.price)} IDRS</span>
             </div>
 
-            {/* Tombol Aksi */}
+            {/* --- PENINGKATAN UX: Alur Tombol Aksi yang Terpandu --- */}
             <div className="mt-6 space-y-3">
-                {!mintSuccess ? (
-                <>
-                {/* Langkah 1: Approve */}
-                <button
-                    onClick={handleApprove}
-                    disabled={isApproving || isMinting}
-                    className="w-full px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    <Wallet className="w-5 h-5" />
-                    {isApproving ? 'Menyetujui...' : '1. Approve IDRS'}
-                </button>
-                 {approveError && (
-                    <p className="text-xs text-red-600 text-center break-words">Approval Gagal: {approveError.shortMessage || approveError.message}</p>
-                )}
+              {!mintSuccess ? (
+                // Tampilkan alur approve & mint jika tiket belum sukses
+                <div className="space-y-4">
+                  {/* TAHAP 1: APPROVE */}
+                  <div>
+                    <button
+                      onClick={handleApprove}
+                      disabled={isApproved || isApproving || isMinting}
+                      className="w-full px-6 py-3 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed
+                                 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400"
+                    >
+                      {isApproving && <Wallet className="w-5 h-5 animate-spin" />}
+                      {isApproved && <CheckCircle className="w-5 h-5" />}
+                      {!isApproving && !isApproved && <Wallet className="w-5 h-5" />}
+                      
+                      {isApproving ? 'Menyetujui...' : (isApproved ? 'IDRS Telah Disetujui' : '1. Approve IDRS')}
+                    </button>
+                    {approveError && (
+                      <p className="text-xs text-red-600 text-center mt-1 break-words">Gagal: {approveError.shortMessage || approveError.message}</p>
+                    )}
+                  </div>
 
-
-                {/* Langkah 2: Mint Ticket */}
-                <button
-                    onClick={handleMint}
-                    disabled={isApproving || isMinting}
-                    className="w-full px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    <Ticket className="w-5 h-5" />
-                    {isMinting ? 'Mencetak Tiket...' : '2. Bayar & Mint Ticket'}
-                </button>
-                 {mintError && (
-                    <p className="text-xs text-red-600 text-center break-words">Minting Gagal: {mintError.shortMessage || mintError.message}</p>
-                )}
-                </>
-                ) : (
+                  {/* TAHAP 2: MINT TICKET (Hanya muncul setelah approve berhasil) */}
+                  <div>
+                    <button
+                      onClick={handleMint}
+                      disabled={!isApproved || isMinting || isApproving}
+                      className="w-full px-6 py-3 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed
+                                 bg-red-600 hover:bg-red-700 disabled:bg-red-300"
+                    >
+                      {isMinting && <Ticket className="w-5 h-5 animate-spin" />}
+                      {!isMinting && <Ticket className="w-5 h-5" />}
+                      {isMinting ? 'Mencetak Tiket...' : '2. Bayar & Mint Ticket'}
+                    </button>
+                    {mintError && (
+                      <p className="text-xs text-red-600 text-center mt-1 break-words">Gagal: {mintError.shortMessage || mintError.message}</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Tampilan jika tiket SUKSES dibuat
                 <div className="text-center bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 className="font-bold text-green-800">Tiket Berhasil Dibuat!</h3>
-                    <p className="text-sm text-green-700 mt-1">
-                        Tiket digital Anda (NFT) dengan Token ID <strong>#{mintedTokenId.toString()}</strong> telah berhasil dicetak di blockchain.
-                    </p>
+                  <h3 className="font-bold text-green-800">Tiket Berhasil Dibuat!</h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    {/* --- PERBAIKAN KRITIKAL: Cek jika mintedTokenId ada sebelum memanggil toString() --- */}
+                    Tiket digital (NFT) dengan Token ID <strong>#{mintedTokenId?.toString() || '...'}</strong> telah berhasil dicetak.
+                  </p>
+                  {/* --- PENINGKATAN: Link dinamis ke transaksi di explorer --- */}
+                  {txHash && (
                      <a
-                        href={`https://sepolia.etherscan.io/`} // Ganti dengan URL explorer yang sesuai
+                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-3 inline-block bg-green-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700"
                     >
-                        Lihat di Explorer
+                        Lihat Transaksi
                     </a>
+                  )}
                 </div>
-                )}
+              )}
             </div>
           </div>
         </div>
